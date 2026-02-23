@@ -15,11 +15,11 @@ const STEPS = [
 ]
 
 const FAQS = [
-  { q: '¿El test es gratuito?', a: 'Sí, realizar el test es completamente gratis. Solo pagas si deseas desbloquear el reporte completo con análisis detallado y recomendaciones personalizadas.' },
+  { q: '¿El test es gratuito?', a: 'Sí, realizar el test es completamente gratuito y anónimo. Al finalizar, tienes la opción de recibir un reporte detallado con análisis personalizado en tu correo.' },
   { q: '¿Es un diagnóstico profesional?', a: 'No. Este test es una herramienta de orientación basada en criterios del DSM-5. No sustituye un diagnóstico profesional. Si necesitas ayuda, te recomendamos consultar con un psicólogo.' },
   { q: '¿Cuánto tiempo toma?', a: 'El test toma aproximadamente 3 minutos. Son 10 preguntas con opciones de respuesta claras.' },
-  { q: '¿Mis respuestas son confidenciales?', a: 'Absolutamente. Tus respuestas son procesadas de forma anónima. Solo se guardan si decides comprar el reporte y nos proporcionas tu email.' },
-  { q: '¿Cómo recibo el reporte?', a: 'Después del pago, el reporte se muestra inmediatamente en pantalla y también se envía a tu email para que lo tengas siempre disponible.' },
+  { q: '¿Mis respuestas son confidenciales?', a: 'Absolutamente. Tus respuestas son procesadas de forma anónima y confidencial. No compartimos tu información con terceros.' },
+  { q: '¿Cómo recibo el reporte?', a: 'Al finalizar el test, puedes solicitar tu reporte detallado. Lo recibes directamente en tu correo electrónico en menos de 2 minutos.' },
 ]
 
 export default function LandingPage() {
@@ -59,7 +59,7 @@ export default function LandingPage() {
             {/* Image - small, circular crop for compact hero */}
             <div className="relative w-[160px] h-[160px] rounded-full overflow-hidden mb-4 shrink-0">
               <img
-                src="/hero-narcisista.png"
+                src="/hero-narcisista.webp"
                 alt="Retrato dramático en sombras"
                 className="w-full h-full object-cover object-top"
                 loading="eager"
@@ -190,22 +190,16 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing */}
+      {/* Social Proof */}
       <section className="py-16 px-4">
         <div className="max-w-md mx-auto">
           <div className="glass-card p-8 text-center glow-yellow">
-            <span className="inline-flex items-center gap-1 text-primary text-sm font-bold mb-4">
-              <span className="material-symbols-outlined text-base">local_offer</span>
-              Precio de lanzamiento
-            </span>
-            <div className="mb-4">
-              <span className="text-white/30 line-through text-lg">$9.99 USD</span>
-              <div className="text-4xl font-extrabold text-primary mt-1">
-                $2.50 <span className="text-lg font-bold">USD</span>
-              </div>
-            </div>
+            <span className="material-symbols-outlined text-primary text-3xl mb-3">group</span>
+            <h2 className="text-2xl font-extrabold mb-3">
+              Más de <span className="text-primary">2,400 mujeres</span> ya dieron el primer paso
+            </h2>
             <p className="text-white/50 text-sm mb-6">
-              El test es gratis. Solo pagas si quieres el reporte completo con análisis detallado.
+              El test es 100% gratuito, anónimo y toma solo 3 minutos. Descubre lo que tus respuestas revelan.
             </p>
             <Link href="/quiz" className="btn-primary inline-block">
               Comenzar Test Gratis
@@ -213,15 +207,15 @@ export default function LandingPage() {
             <div className="flex justify-center gap-4 mt-6 text-white/30 text-xs">
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">lock</span>
-                Pago seguro
+                100% anónimo
               </span>
               <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">mail</span>
-                Envío inmediato
+                <span className="material-symbols-outlined text-sm">timer</span>
+                3 minutos
               </span>
               <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-sm">shield</span>
-                PayPal
+                <span className="material-symbols-outlined text-sm">verified</span>
+                DSM-5
               </span>
             </div>
           </div>

@@ -4,10 +4,13 @@ import { useEffect, useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { useQuizStore } from '@/features/quiz/store/quizStore'
-import { calculateResults, getLevelColor } from '@/features/quiz/services/scoring'
-import { ScoreGauge } from './ScoreGauge'
-import { CategoryBar } from './CategoryBar'
-import { Category } from '../types'
+import { calculateResults } from '@/features/quiz/services/scoring'
+
+const INTRIGUE_PHRASES = [
+  'Lo que encontramos en tus respuestas lo cambia todo.',
+  'Hay algo que llevas tiempo sintiendo. Ahora tienes la respuesta.',
+  'Esto explica por qué no puedes salir de ahí.',
+]
 
 export default function ResultadosContent() {
   const router = useRouter()
@@ -16,8 +19,8 @@ export default function ResultadosContent() {
   const [paymentError, setPaymentError] = useState('')
   const [sessionId, setLocalSessionId] = useState<string | null>(null)
   const [emailCaptured, setEmailCaptured] = useState(false)
+  const [reportSent, setReportSent] = useState(false)
 
-  // Wait for Zustand persist to hydrate from localStorage
   useEffect(() => {
     if (useQuizStore.persist.hasHydrated()) {
       setHydrated(true)
@@ -32,7 +35,13 @@ export default function ResultadosContent() {
     return calculateResults(answers)
   }, [answers])
 
-  // Only redirect after store is fully hydrated
+  // Pick a random intrigue phrase based on score
+  const intriguePhrase = useMemo(() => {
+    if (!result) return INTRIGUE_PHRASES[0]
+    const idx = result.totalScore % INTRIGUE_PHRASES.length
+    return INTRIGUE_PHRASES[idx]
+  }, [result])
+
   useEffect(() => {
     if (hydrated && !isCompleted) {
       router.push('/quiz')
@@ -70,7 +79,28 @@ export default function ResultadosContent() {
     }, 1500)
 
     return () => clearTimeout(timer)
-  }, [email, result, emailCaptured, answers, sessionId, setSessionId])
+  }, [email, result, emailCaptured, answers, sessionId, setSessionId, name])
+
+  // Send report via email after payment
+  useEffect(() => {
+    if (!isPaid || reportSent || !email || !sessionId) return
+
+    const sendReport = async () => {
+      try {
+        await fetch('/api/send-report', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, email, name }),
+        })
+        setReportSent(true)
+      } catch (err) {
+        console.error('Error sending report:', err)
+        setReportSent(true) // Don't block UI
+      }
+    }
+
+    sendReport()
+  }, [isPaid, reportSent, email, sessionId, name])
 
   const createOrder = useCallback(async () => {
     if (!result) throw new Error('No results')
@@ -98,7 +128,7 @@ export default function ResultadosContent() {
     setLocalSessionId(data.sessionId)
     setSessionId(data.sessionId)
     return data.orderId
-  }, [answers, result, email, setSessionId])
+  }, [answers, result, email, sessionId, setSessionId])
 
   const onApprove = useCallback(async (data: { orderID: string }) => {
     const res = await fetch('/api/payment/capture', {
@@ -127,8 +157,6 @@ export default function ResultadosContent() {
     )
   }
 
-  const levelColor = getLevelColor(result.level)
-
   const handleNewTest = () => {
     reset()
     router.push('/')
@@ -137,66 +165,58 @@ export default function ResultadosContent() {
   return (
     <div className="min-h-screen px-4 py-8">
       <div className="max-w-md mx-auto">
-        <h1 className="text-2xl font-bold text-center mb-8">Tus Resultados</h1>
 
-        {/* Score Gauge */}
-        <div className="flex justify-center mb-6">
-          <ScoreGauge score={result.totalScore} maxScore={result.maxScore} color={levelColor} />
-        </div>
-
-        {/* Risk Level Badge */}
-        <div className="flex justify-center mb-8">
-          <span
-            className="px-6 py-2 rounded-full text-sm font-bold"
-            style={{ backgroundColor: `${levelColor}20`, color: levelColor }}
-          >
-            {result.levelLabel}
-          </span>
-        </div>
-
-        {/* Category Breakdown */}
-        <div className="glass-card p-6 mb-8">
-          <h3 className="text-lg font-bold mb-6">Desglose por Categoría</h3>
-          <div className="space-y-5">
-            {result.categoryScores.map(cat => (
-              <CategoryBar key={cat.category} {...cat} />
-            ))}
-          </div>
-        </div>
-
-        {/* Locked/Unlocked Section */}
         {!isPaid ? (
           <>
-            {/* Blurred Preview */}
-            <div className="relative mb-8">
-              <div className="glass-card p-6 blur-sm select-none pointer-events-none" aria-hidden="true">
-                <h3 className="text-lg font-bold mb-4">Tu Análisis Detallado</h3>
-                <p className="text-white/60 mb-3">
-                  Basado en tus respuestas, hemos identificado patrones significativos en las áreas de
-                  manipulación emocional y control que requieren atención...
-                </p>
-                <h4 className="font-bold mb-2">Recomendaciones Personalizadas</h4>
-                <ul className="text-white/60 space-y-2">
-                  <li>Establecer límites claros y firmes en la relación</li>
-                  <li>Buscar apoyo profesional especializado</li>
-                  <li>Fortalecer tu red de apoyo social y emocional</li>
-                </ul>
+            {/* Intrigue Phase - No data, just emotional tension */}
+            <div className="text-center pt-8 mb-10">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                <span className="material-symbols-outlined text-primary text-4xl">psychology</span>
               </div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0a0a0a] via-[#0a0a0a]/80 to-transparent rounded-2xl flex flex-col items-center justify-end pb-6">
-                <span className="material-symbols-outlined text-4xl text-white/30 mb-2">lock</span>
-                <p className="text-white/40 text-sm">Contenido bloqueado</p>
-              </div>
+              <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight mb-4">
+                {intriguePhrase}
+              </h1>
+              <p className="text-white/40 text-sm">
+                Hemos analizado tus 10 respuestas en 5 dimensiones clínicas.
+              </p>
             </div>
 
-            {/* Payment Card */}
-            <div className="glass-card p-6 glow-yellow">
-              <h3 className="text-lg font-bold text-center mb-2">
-                Desbloquea tu reporte completo
-              </h3>
-              <p className="text-white/50 text-sm text-center mb-6">
-                Recibe un análisis detallado con recomendaciones personalizadas en tu email.
+            {/* Paywall Card */}
+            <div className="glass-card p-6 glow-yellow mb-6">
+              <div className="flex items-center gap-2 mb-4">
+                <span className="material-symbols-outlined text-primary">lock</span>
+                <h2 className="text-lg font-bold">Tu reporte personal está listo</h2>
+              </div>
+
+              <p className="text-white/60 text-sm mb-5">
+                Hemos analizado tus respuestas y preparado un reporte detallado con todo lo que necesitas saber.
+                Lo que encontramos es importante.
               </p>
 
+              <p className="text-white/70 text-sm font-semibold mb-4">
+                Por solo <span className="text-primary">$2.50 USD</span> recibe en tu correo:
+              </p>
+
+              <ul className="space-y-3 mb-6">
+                {[
+                  'Tu nivel de riesgo real con explicación clínica',
+                  'Los patrones exactos que detectamos en tu relación',
+                  'Qué significa esto para ti y qué puedes hacer ahora',
+                  'Recomendaciones personalizadas basadas en el DSM-5',
+                ].map((item) => (
+                  <li key={item} className="flex items-start gap-3 text-white/60 text-sm">
+                    <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0">check_circle</span>
+                    {item}
+                  </li>
+                ))}
+              </ul>
+
+              <div className="flex items-center gap-2 text-white/40 text-xs mb-5">
+                <span className="material-symbols-outlined text-sm">mail</span>
+                <span>Lo recibes en tu correo en menos de 2 minutos.</span>
+              </div>
+
+              {/* Name + Email inputs */}
               <input
                 type="text"
                 placeholder="Tu nombre"
@@ -243,7 +263,7 @@ export default function ResultadosContent() {
                 </PayPalScriptProvider>
               ) : (
                 <div className="text-center text-white/30 text-sm py-4 border-2 border-dashed border-white/10 rounded-2xl">
-                  Ingresa tu email para ver opciones de pago
+                  Ingresa tu email para continuar
                 </div>
               )}
 
@@ -257,52 +277,48 @@ export default function ResultadosContent() {
                   Pago seguro
                 </span>
                 <span className="flex items-center gap-1">
-                  <span className="material-symbols-outlined text-sm">mail</span>
-                  Envío inmediato
+                  <span className="material-symbols-outlined text-sm">verified</span>
+                  PayPal
                 </span>
               </div>
+            </div>
+
+            {/* Price anchoring */}
+            <div className="text-center mb-6">
+              <span className="text-white/20 line-through text-sm">$9.99 USD</span>
+              <span className="text-primary font-bold text-lg ml-2">$2.50 USD</span>
+              <p className="text-white/30 text-xs mt-1">Precio de lanzamiento por tiempo limitado</p>
             </div>
           </>
         ) : (
           <>
-            {/* Full Report */}
+            {/* Post-Payment: Report sent confirmation */}
+            <div className="text-center pt-12 mb-10">
+              <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                <span className="material-symbols-outlined text-primary text-4xl">mark_email_read</span>
+              </div>
+              <h1 className="text-2xl font-extrabold mb-3">
+                Tu reporte está en camino
+              </h1>
+              <p className="text-white/60 text-sm mb-2">
+                Revisa tu bandeja de entrada en <span className="text-primary font-semibold">{email}</span>
+              </p>
+              <p className="text-white/40 text-xs">
+                Si no lo ves en los próximos 2 minutos, revisa tu carpeta de spam.
+              </p>
+            </div>
+
             <div className="glass-card p-6 mb-8">
               <div className="flex items-center gap-2 text-primary mb-4">
                 <span className="material-symbols-outlined">verified</span>
-                <span className="font-bold">Reporte Desbloqueado</span>
+                <span className="font-bold">Pago confirmado</span>
               </div>
-
-              <h3 className="text-lg font-bold mb-4">Tu Análisis Detallado</h3>
-              <p className="text-white/70 mb-6">{result.levelDescription}</p>
-
-              {result.categoryScores.map(cat => (
-                <div key={cat.category} className="mb-5">
-                  <h4 className="font-bold flex items-center gap-2 mb-2">
-                    <span>{cat.emoji}</span> {cat.label}
-                    <span className="text-white/40 text-sm font-normal">({cat.percentage}%)</span>
-                  </h4>
-                  <p className="text-white/60 text-sm">
-                    {getCategoryInsight(cat.category, cat.percentage)}
-                  </p>
-                </div>
-              ))}
-
-              <hr className="border-white/10 my-6" />
-
-              <h3 className="text-lg font-bold mb-4">Recomendaciones</h3>
-              <ul className="space-y-3">
-                {getRecommendations(result.level).map((rec, i) => (
-                  <li key={i} className="flex items-start gap-3 text-white/70 text-sm">
-                    <span className="material-symbols-outlined text-primary text-base mt-0.5 shrink-0">check_circle</span>
-                    {rec}
-                  </li>
-                ))}
-              </ul>
+              <p className="text-white/50 text-sm">
+                Tu reporte personalizado incluye tu nivel de riesgo, análisis por categoría,
+                patrones detectados y recomendaciones basadas en el DSM-5.
+                Todo ha sido enviado a tu correo electrónico.
+              </p>
             </div>
-
-            <p className="text-white/30 text-xs text-center mb-6">
-              Se ha enviado una copia de este reporte a tu email.
-            </p>
           </>
         )}
 
@@ -321,70 +337,4 @@ export default function ResultadosContent() {
       </div>
     </div>
   )
-}
-
-function getCategoryInsight(category: Category, percentage: number): string {
-  const level = percentage >= 65 ? 'high' : percentage >= 35 ? 'medium' : 'low'
-
-  const insights: Record<string, Record<string, string>> = {
-    manipulacion: {
-      high: 'Se detectan tácticas de manipulación emocional frecuentes. Tu pareja puede estar usando tus sentimientos y vulnerabilidades para controlar situaciones a su favor.',
-      medium: 'Hay indicios de comportamiento manipulador ocasional. Presta atención a patrones que se repitan con el tiempo.',
-      low: 'No se detectan patrones significativos de manipulación emocional en esta área.',
-    },
-    empatia: {
-      high: 'Tu pareja muestra una marcada falta de empatía. La incapacidad de conectar emocionalmente contigo es una señal importante de rasgos narcisistas.',
-      medium: 'Hay momentos en que tu pareja no logra conectar emocionalmente contigo. Observa si esto ocurre especialmente en momentos clave.',
-      low: 'Tu pareja muestra capacidad empática en general en la relación.',
-    },
-    control: {
-      high: 'Se detecta un patrón de control significativo sobre tus decisiones, relaciones sociales y libertad personal.',
-      medium: 'Existen algunas señales de comportamiento controlador. Presta atención a si estos patrones se intensifican con el tiempo.',
-      low: 'No se detectan patrones significativos de control en tu relación.',
-    },
-    gaslighting: {
-      high: 'Se identifican tácticas de gaslighting frecuentes que pueden estar afectando tu percepción de la realidad y tu autoconfianza.',
-      medium: 'Hay indicios de distorsión de la realidad ocasional. Es importante que confíes en tu memoria y tus percepciones.',
-      low: 'No se detectan patrones significativos de gaslighting en la relación.',
-    },
-    grandiosidad: {
-      high: 'Tu pareja muestra un sentido exagerado de su propia importancia y espera un trato preferencial constante de tu parte.',
-      medium: 'Hay momentos en que tu pareja muestra actitudes de superioridad. Observa cómo esto afecta la dinámica de la relación.',
-      low: 'No se detectan patrones significativos de grandiosidad o superioridad.',
-    },
-  }
-
-  return insights[category]?.[level] || ''
-}
-
-function getRecommendations(level: string): string[] {
-  const recs: Record<string, string[]> = {
-    bajo: [
-      'Mantén una comunicación abierta y honesta en tu relación.',
-      'Establece y respeta límites saludables mutuamente.',
-      'Continúa educándote sobre relaciones saludables.',
-    ],
-    moderado: [
-      'Establece límites claros y comunícalos firmemente.',
-      'Considera hablar con un terapeuta o consejero de parejas.',
-      'Fortalece tu red de apoyo (amistades, familia).',
-      'Documenta situaciones que te incomoden para identificar patrones.',
-    ],
-    alto: [
-      'Busca apoyo profesional (psicólogo o terapeuta especializado).',
-      'Establece límites firmes y no negociables.',
-      'Fortalece tu red de apoyo y no te aísles.',
-      'Crea un plan de seguridad emocional y, si es necesario, física.',
-      'Considera si esta relación es compatible con tu bienestar.',
-    ],
-    extremo: [
-      'Busca ayuda profesional de inmediato (línea de ayuda o terapeuta).',
-      'Prioriza tu seguridad física y emocional ante todo.',
-      'Contacta organizaciones de apoyo a víctimas de abuso emocional.',
-      'No enfrentes esta situación sola — busca apoyo de personas de confianza.',
-      'Elabora un plan de seguridad con ayuda profesional.',
-    ],
-  }
-
-  return recs[level] || recs.moderado
 }
