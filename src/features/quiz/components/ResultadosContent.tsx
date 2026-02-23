@@ -1,7 +1,8 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useMemo, useState, useCallback } from 'react'
+import { useRouter } from 'next/navigation'
+import { PayPalScriptProvider, PayPalButtons } from '@paypal/react-paypal-js'
 import { useQuizStore } from '@/features/quiz/store/quizStore'
 import { calculateResults, getLevelColor } from '@/features/quiz/services/scoring'
 import { ScoreGauge } from './ScoreGauge'
@@ -10,37 +11,115 @@ import { Category } from '../types'
 
 export default function ResultadosContent() {
   const router = useRouter()
-  const searchParams = useSearchParams()
-  const { answers, isCompleted, isPaid, setIsPaid, email, setEmail, setSessionId, reset } = useQuizStore()
-  const [isLoading, setIsLoading] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const { answers, isCompleted, isPaid, setIsPaid, email, setEmail, name, setName, setSessionId, reset } = useQuizStore()
+  const [hydrated, setHydrated] = useState(false)
+  const [paymentError, setPaymentError] = useState('')
+  const [sessionId, setLocalSessionId] = useState<string | null>(null)
+  const [emailCaptured, setEmailCaptured] = useState(false)
+
+  // Wait for Zustand persist to hydrate from localStorage
+  useEffect(() => {
+    if (useQuizStore.persist.hasHydrated()) {
+      setHydrated(true)
+      return
+    }
+    const unsub = useQuizStore.persist.onFinishHydration(() => setHydrated(true))
+    return unsub
+  }, [])
 
   const result = useMemo(() => {
     if (answers.length === 0) return null
     return calculateResults(answers)
   }, [answers])
 
+  // Only redirect after store is fully hydrated
   useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  useEffect(() => {
-    const status = searchParams.get('collection_status')
-    const externalRef = searchParams.get('external_reference')
-
-    if (status === 'approved' && externalRef) {
-      setIsPaid(true)
-      setSessionId(externalRef)
-    }
-  }, [searchParams, setIsPaid, setSessionId])
-
-  useEffect(() => {
-    if (mounted && !isCompleted && !searchParams.get('collection_status')) {
+    if (hydrated && !isCompleted) {
       router.push('/quiz')
     }
-  }, [mounted, isCompleted, router, searchParams])
+  }, [hydrated, isCompleted, router])
 
-  if (!mounted || !result) {
+  // Debounced email capture - sends email + quiz data to start drip sequence
+  useEffect(() => {
+    if (!email || !email.includes('@') || !result || emailCaptured) return
+
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/capture-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email,
+            name,
+            answers,
+            totalScore: result.totalScore,
+            level: result.level,
+            categoryScores: result.categoryScores,
+            sessionId: sessionId || undefined,
+          }),
+        })
+        const data = await res.json()
+        if (data.sessionId) {
+          setLocalSessionId(data.sessionId)
+          setSessionId(data.sessionId)
+          setEmailCaptured(true)
+        }
+      } catch (err) {
+        console.error('Email capture error:', err)
+      }
+    }, 1500)
+
+    return () => clearTimeout(timer)
+  }, [email, result, emailCaptured, answers, sessionId, setSessionId])
+
+  const createOrder = useCallback(async () => {
+    if (!result) throw new Error('No results')
+
+    const res = await fetch('/api/payment/create', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        answers,
+        totalScore: result.totalScore,
+        level: result.level,
+        categoryScores: result.categoryScores,
+        email,
+        sessionId: sessionId || undefined,
+      }),
+    })
+
+    const data = await res.json()
+
+    if (!res.ok) {
+      setPaymentError(data.error || 'Error al crear orden')
+      throw new Error(data.error)
+    }
+
+    setLocalSessionId(data.sessionId)
+    setSessionId(data.sessionId)
+    return data.orderId
+  }, [answers, result, email, setSessionId])
+
+  const onApprove = useCallback(async (data: { orderID: string }) => {
+    const res = await fetch('/api/payment/capture', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderId: data.orderID,
+        sessionId: sessionId,
+      }),
+    })
+
+    const captureData = await res.json()
+
+    if (captureData.success) {
+      setIsPaid(true)
+    } else {
+      setPaymentError('Error al procesar el pago. Intenta de nuevo.')
+    }
+  }, [sessionId, setIsPaid])
+
+  if (!hydrated || !result) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="w-12 h-12 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
@@ -49,36 +128,6 @@ export default function ResultadosContent() {
   }
 
   const levelColor = getLevelColor(result.level)
-
-  const handlePayment = async () => {
-    if (!email) return
-    setIsLoading(true)
-
-    try {
-      const res = await fetch('/api/payment/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          answers,
-          totalScore: result.totalScore,
-          level: result.level,
-          categoryScores: result.categoryScores,
-          email,
-        }),
-      })
-
-      const data = await res.json()
-
-      if (data.initPoint) {
-        setSessionId(data.sessionId)
-        window.location.href = data.initPoint
-      }
-    } catch (error) {
-      console.error('Payment error:', error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleNewTest = () => {
     reset()
@@ -149,6 +198,16 @@ export default function ResultadosContent() {
               </p>
 
               <input
+                type="text"
+                placeholder="Tu nombre"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 mb-3
+                           text-white placeholder:text-white/30 focus:outline-none focus:border-primary
+                           transition-colors"
+              />
+
+              <input
                 type="email"
                 placeholder="tu@email.com"
                 value={email}
@@ -158,14 +217,39 @@ export default function ResultadosContent() {
                            transition-colors"
               />
 
-              <button
-                onClick={handlePayment}
-                disabled={!email || isLoading}
-                className="w-full btn-primary disabled:opacity-50 disabled:cursor-not-allowed
-                           disabled:hover:scale-100 disabled:hover:shadow-none"
-              >
-                {isLoading ? 'Procesando...' : 'Desbloquear por $9.900 COP'}
-              </button>
+              {email ? (
+                <PayPalScriptProvider
+                  options={{
+                    clientId: process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID!,
+                    currency: 'USD',
+                    intent: 'capture',
+                  }}
+                >
+                  <PayPalButtons
+                    style={{
+                      color: 'gold',
+                      shape: 'pill',
+                      label: 'pay',
+                      height: 48,
+                      layout: 'vertical',
+                    }}
+                    createOrder={createOrder}
+                    onApprove={onApprove}
+                    onError={(err) => {
+                      console.error('PayPal error:', err)
+                      setPaymentError(`Error con PayPal: ${err}`)
+                    }}
+                  />
+                </PayPalScriptProvider>
+              ) : (
+                <div className="text-center text-white/30 text-sm py-4 border-2 border-dashed border-white/10 rounded-2xl">
+                  Ingresa tu email para ver opciones de pago
+                </div>
+              )}
+
+              {paymentError && (
+                <p className="text-red-400 text-sm text-center mt-3">{paymentError}</p>
+              )}
 
               <div className="flex items-center justify-center gap-4 mt-4 text-white/30 text-xs">
                 <span className="flex items-center gap-1">

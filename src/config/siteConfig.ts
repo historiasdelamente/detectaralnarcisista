@@ -16,6 +16,12 @@ export const siteConfig = {
   emails: {
     from: 'Detectar al Narcisista <noreply@historiasdelamente.com>',
   },
+  course: {
+    name: 'Apego Detox',
+    price: 25,
+    currency: 'USD',
+    url: 'https://historiasdelamente.com/apegodetox',
+  },
   seo: {
     siteTitle: 'Detectar al Narcisista | Test Psicológico Basado en DSM-5',
     defaultDescription: 'Descubre si tu relación tiene patrones narcisistas. Test científico de 10 preguntas.',

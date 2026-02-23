@@ -1,11 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { siteConfig } from '@/config/siteConfig'
+
+const PAYPAL_API = process.env.PAYPAL_API_URL || 'https://api-m.paypal.com'
+
+async function getPayPalAccessToken(): Promise<string> {
+  const auth = Buffer.from(
+    `${process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
+  ).toString('base64')
+
+  const res = await fetch(`${PAYPAL_API}/v1/oauth2/token`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Basic ${auth}`,
+      'Content-Type': 'application/x-www-form-urlencoded',
+    },
+    body: 'grant_type=client_credentials',
+  })
+
+  if (!res.ok) {
+    const errData = await res.json()
+    console.error('PayPal auth error:', errData)
+    throw new Error(`PayPal auth failed: ${errData.error_description || res.status}`)
+  }
+
+  const data = await res.json()
+  return data.access_token
+}
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { answers, totalScore, level, categoryScores, email } = body
+    const { answers, totalScore, level, categoryScores, email, sessionId: existingSessionId } = body
 
     if (!answers || !email || totalScore === undefined || !level) {
       return NextResponse.json({ error: 'Datos incompletos' }, { status: 400 })
@@ -13,77 +38,80 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient()
 
-    // Create quiz session in Supabase
-    const { data: session, error: dbError } = await supabase
-      .from('quiz_sessions')
-      .insert({
-        answers,
-        total_score: totalScore,
-        level,
-        category_scores: categoryScores,
-        email,
-        payment_status: 'pending',
-      })
-      .select('id')
-      .single()
+    let sessionId = existingSessionId
 
-    if (dbError || !session) {
-      console.error('DB error:', dbError)
-      return NextResponse.json({ error: 'Error al crear sesión' }, { status: 500 })
+    if (existingSessionId) {
+      // Reuse existing session (created by capture-email)
+      await supabase
+        .from('quiz_sessions')
+        .update({ email, payment_status: 'pending' })
+        .eq('id', existingSessionId)
+    } else {
+      // Create new quiz session
+      const { data: session, error: dbError } = await supabase
+        .from('quiz_sessions')
+        .insert({
+          answers,
+          total_score: totalScore,
+          level,
+          category_scores: categoryScores,
+          email,
+          payment_status: 'pending',
+        })
+        .select('id')
+        .single()
+
+      if (dbError || !session) {
+        console.error('DB error:', dbError)
+        return NextResponse.json({ error: 'Error al crear sesión en DB' }, { status: 500 })
+      }
+
+      sessionId = session.id
     }
 
-    const baseUrl = siteConfig.url
+    // Create PayPal order (USD - PayPal Colombia works with USD)
+    const accessToken = await getPayPalAccessToken()
 
-    // Create MercadoPago preference
-    const mpResponse = await fetch('https://api.mercadopago.com/checkout/preferences', {
+    const orderRes = await fetch(`${PAYPAL_API}/v2/checkout/orders`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${process.env.MP_ACCESS_TOKEN}`,
+        'Authorization': `Bearer ${accessToken}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        items: [
-          {
-            title: 'Reporte Completo - Detectar al Narcisista',
-            quantity: 1,
-            unit_price: siteConfig.pricing.amount,
-            currency_id: siteConfig.pricing.currency,
+        intent: 'CAPTURE',
+        purchase_units: [{
+          amount: {
+            currency_code: 'USD',
+            value: '2.50',
           },
-        ],
-        back_urls: {
-          success: `${baseUrl}/resultados`,
-          failure: `${baseUrl}/resultados`,
-          pending: `${baseUrl}/resultados`,
-        },
-        auto_return: 'approved',
-        external_reference: session.id,
-        notification_url: `${baseUrl}/api/payment/webhook`,
-        statement_descriptor: 'NARCISISTA TEST',
-        payer: {
-          email,
-        },
+          description: 'Reporte Completo - Detectar al Narcisista',
+          custom_id: sessionId,
+        }],
       }),
     })
 
-    const mpData = await mpResponse.json()
+    const order = await orderRes.json()
 
-    if (!mpResponse.ok) {
-      console.error('MercadoPago error:', mpData)
-      return NextResponse.json({ error: 'Error al crear preferencia de pago' }, { status: 500 })
+    if (!orderRes.ok) {
+      console.error('PayPal order error:', JSON.stringify(order, null, 2))
+      const detail = order.details?.[0]?.description || order.message || 'Error desconocido'
+      return NextResponse.json({ error: `PayPal: ${detail}` }, { status: 500 })
     }
 
-    // Save MP preference ID
+    // Save PayPal order ID
     await supabase
       .from('quiz_sessions')
-      .update({ mp_preference_id: mpData.id })
-      .eq('id', session.id)
+      .update({ payment_id: order.id })
+      .eq('id', sessionId)
 
     return NextResponse.json({
-      initPoint: mpData.init_point,
-      sessionId: session.id,
+      orderId: order.id,
+      sessionId,
     })
   } catch (error) {
     console.error('Payment create error:', error)
-    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 })
+    const message = error instanceof Error ? error.message : 'Error interno'
+    return NextResponse.json({ error: message }, { status: 500 })
   }
 }

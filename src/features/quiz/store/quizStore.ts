@@ -9,6 +9,7 @@ interface QuizState {
   sessionId: string | null
   isPaid: boolean
   email: string
+  name: string
 
   setAnswer: (questionId: number, value: number) => void
   nextQuestion: () => void
@@ -17,6 +18,7 @@ interface QuizState {
   setSessionId: (id: string) => void
   setIsPaid: (paid: boolean) => void
   setEmail: (email: string) => void
+  setName: (name: string) => void
   reset: () => void
 }
 
@@ -29,6 +31,7 @@ export const useQuizStore = create<QuizState>()(
       sessionId: null,
       isPaid: false,
       email: '',
+      name: '',
 
       setAnswer: (questionId: number, value: number) => {
         const { answers } = get()
@@ -66,6 +69,8 @@ export const useQuizStore = create<QuizState>()(
 
       setEmail: (email: string) => set({ email }),
 
+      setName: (name: string) => set({ name }),
+
       reset: () => set({
         currentQuestion: 0,
         answers: [],
@@ -73,6 +78,7 @@ export const useQuizStore = create<QuizState>()(
         sessionId: null,
         isPaid: false,
         email: '',
+        name: '',
       }),
     }),
     {
