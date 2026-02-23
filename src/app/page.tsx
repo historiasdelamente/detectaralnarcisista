@@ -1,11 +1,11 @@
 import Link from 'next/link'
 
 const CATEGORIES = [
-  { emoji: '🎭', label: 'Manipulación', desc: 'Uso de tácticas emocionales para controlar' },
-  { emoji: '💔', label: 'Falta de Empatía', desc: 'Incapacidad de conectar con tus emociones' },
-  { emoji: '⛓️', label: 'Necesidad de Control', desc: 'Dominio sobre decisiones y relaciones' },
-  { emoji: '🌫️', label: 'Gaslighting', desc: 'Distorsión de la realidad para confundirte' },
-  { emoji: '👑', label: 'Superioridad', desc: 'Sentido exagerado de importancia propia' },
+  { icon: 'theater_comedy', label: 'Manipulación', desc: 'Uso de tácticas emocionales para controlar' },
+  { icon: 'heart_broken', label: 'Falta de Empatía', desc: 'Incapacidad de conectar con tus emociones' },
+  { icon: 'link', label: 'Necesidad de Control', desc: 'Dominio sobre decisiones y relaciones' },
+  { icon: 'blur_on', label: 'Gaslighting', desc: 'Distorsión de la realidad para confundirte' },
+  { icon: 'diamond', label: 'Superioridad', desc: 'Sentido exagerado de importancia propia' },
 ]
 
 const STEPS = [
@@ -41,41 +41,105 @@ export default function LandingPage() {
       </header>
 
       {/* Hero */}
-      <section className="pt-28 pb-16 px-4">
-        <div className="max-w-md mx-auto text-center">
-          <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-8">
-            <span className="material-symbols-outlined text-primary text-base">psychology</span>
-            <span className="text-primary text-sm font-medium">Basado en DSM-5</span>
+      <section className="relative pt-20 pb-4 px-4 overflow-hidden">
+        {/* Background glow effect */}
+        <div className="absolute top-1/3 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/5 rounded-full blur-[100px] pointer-events-none" />
+
+        <div className="max-w-md mx-auto relative z-10">
+          {/* Top Tag */}
+          <div className="flex justify-center mb-4">
+            <div className="inline-flex items-center gap-2 bg-white/5 border border-white/10 rounded-full px-3 py-1.5">
+              <span className="material-symbols-outlined text-primary text-sm">psychology</span>
+              <span className="text-white/70 text-xs font-bold tracking-widest uppercase">Test Psicológico</span>
+            </div>
           </div>
-          <h1 className="text-4xl font-extrabold leading-tight mb-6">
-            ¿Estás en una relación con un{' '}
-            <span className="text-gradient-yellow">narcisista</span>?
-          </h1>
-          <p className="text-white/60 text-lg mb-8">
-            Descúbrelo en 3 minutos con nuestro test científico de 10 preguntas.
+
+          {/* Hero Image + Headline combo */}
+          <div className="relative flex flex-col items-center mb-4">
+            {/* Image - small, circular crop for compact hero */}
+            <div className="relative w-[160px] h-[160px] rounded-full overflow-hidden mb-4 shrink-0">
+              <img
+                src="/hero-narcisista.png"
+                alt="Retrato dramático en sombras"
+                className="w-full h-full object-cover object-top"
+                loading="eager"
+                width={160}
+                height={160}
+              />
+              {/* Subtle glow behind image */}
+              <div className="absolute inset-0 rounded-full shadow-[0_0_40px_rgba(255,217,0,0.15)]" />
+            </div>
+
+            {/* Headline - The Emotional Hook */}
+            <h1 className="text-2xl sm:text-3xl font-extrabold leading-tight text-center mb-3">
+              Él te dice que estás{' '}
+              <span className="text-gradient-yellow">loca</span>.
+              <br />
+              <span className="text-white/90">Pero tú sabes que algo no está bien.</span>
+            </h1>
+          </div>
+
+          {/* Emotional Sub-copy */}
+          <p className="text-white/50 text-sm text-center leading-relaxed mb-4 max-w-sm mx-auto">
+            El agotamiento. Las disculpas que nunca llegan. La sensación de que todo es tu culpa.{' '}
+            <span className="text-white/80 font-semibold">No estás loca.</span>{' '}
+            Y este test te lo va a demostrar.
           </p>
-          <div className="flex flex-col gap-4">
-            <Link href="/quiz" className="btn-primary text-center">
-              Comenzar Test Gratis
+
+          {/* CTA - visible above the fold */}
+          <div className="flex flex-col gap-2 mb-4">
+            <Link href="/quiz" className="btn-primary text-center text-lg">
+              Descubrir la Verdad
             </Link>
-            <a href="#como-funciona" className="btn-outline text-center">
-              Saber Más
+            <a href="#como-funciona" className="btn-outline text-center text-sm py-3">
+              Son solo 3 minutos
             </a>
           </div>
-          <div className="flex justify-center gap-6 mt-8 text-white/40 text-sm">
-            <span className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-base">timer</span>
-              3 minutos
+
+          {/* Social Proof + Trust */}
+          <p className="text-center text-white/40 text-xs mb-3">
+            <span className="text-primary font-bold">+2,400 mujeres</span> ya lo hicieron esta semana
+          </p>
+
+          <div className="flex justify-center gap-4 text-white/30 text-xs">
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-sm">timer</span>
+              3 min
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-base">verified</span>
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-sm">lock</span>
+              Anónimo
+            </span>
+            <span className="flex items-center gap-1">
+              <span className="material-symbols-outlined text-sm">shield</span>
               DSM-5
             </span>
-            <span className="flex items-center gap-1.5">
-              <span className="material-symbols-outlined text-base">bolt</span>
-              Inmediato
-            </span>
           </div>
+        </div>
+      </section>
+
+      {/* Pain Points - Emotional Bridge */}
+      <section className="py-12 px-4">
+        <div className="max-w-md mx-auto">
+          <p className="text-center text-white/30 text-sm font-medium tracking-wide uppercase mb-8">
+            Si esto te suena familiar...
+          </p>
+          <div className="space-y-3">
+            {[
+              { icon: 'hearing_disabled', text: 'Sientes que tus emociones no importan en la relación' },
+              { icon: 'psychology_alt', text: 'Te preguntas si eres tú la del problema' },
+              { icon: 'energy_savings_leaf', text: 'Estás agotada de intentar que todo funcione' },
+              { icon: 'visibility_off', text: 'Tus amigos y familia ya no entienden por qué sigues ahí' },
+            ].map((item) => (
+              <div key={item.icon} className="flex items-center gap-4 glass-card p-4">
+                <span className="material-symbols-outlined text-primary/70 text-xl shrink-0">{item.icon}</span>
+                <span className="text-white/60 text-sm">{item.text}</span>
+              </div>
+            ))}
+          </div>
+          <p className="text-center mt-8 text-white/50 text-sm">
+            No es tu culpa. Pero sí es tu <span className="text-primary font-bold">decisión</span> descubrirlo.
+          </p>
         </div>
       </section>
 
@@ -117,7 +181,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-2 gap-3">
             {CATEGORIES.map((cat) => (
               <div key={cat.label} className="glass-card p-4 hover:border-primary/30 transition-colors">
-                <span className="text-2xl mb-2 block">{cat.emoji}</span>
+                <span className="material-symbols-outlined text-primary text-2xl mb-2 block">{cat.icon}</span>
                 <h3 className="font-bold text-sm mb-1">{cat.label}</h3>
                 <p className="text-white/40 text-xs">{cat.desc}</p>
               </div>
@@ -135,9 +199,9 @@ export default function LandingPage() {
               Precio de lanzamiento
             </span>
             <div className="mb-4">
-              <span className="text-white/30 line-through text-lg">$29.900</span>
+              <span className="text-white/30 line-through text-lg">$9.99 USD</span>
               <div className="text-4xl font-extrabold text-primary mt-1">
-                $9.900 <span className="text-lg font-bold">COP</span>
+                $2.50 <span className="text-lg font-bold">USD</span>
               </div>
             </div>
             <p className="text-white/50 text-sm mb-6">
@@ -157,7 +221,7 @@ export default function LandingPage() {
               </span>
               <span className="flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm">shield</span>
-                MercadoPago
+                PayPal
               </span>
             </div>
           </div>
