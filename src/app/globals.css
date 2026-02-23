@@ -1,0 +1,90 @@
+@import url('https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #ffd900;
+  --color-bg-dark: #0a0a0a;
+  --color-surface: #1E1E1E;
+  --color-surface-light: #2a2a2a;
+}
+
+html {
+  font-family: 'Manrope', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-bg-dark);
+  color: #ffffff;
+  line-height: 1.6;
+}
+
+::selection {
+  background-color: rgba(255, 217, 0, 0.3);
+  color: white;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #121212;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+@layer components {
+  .glass-card {
+    background: rgba(30, 30, 30, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 16px;
+  }
+
+  .glow-yellow {
+    box-shadow: 0 0 30px rgba(255, 217, 0, 0.2);
+  }
+
+  .btn-primary {
+    @apply bg-primary text-black font-bold rounded-full px-8 py-4
+           transition-all duration-300 hover:scale-105
+           hover:shadow-[0_0_30px_rgba(255,217,0,0.4)];
+  }
+
+  .btn-outline {
+    @apply border-2 border-white/20 text-white font-semibold rounded-full px-8 py-4
+           transition-all duration-300 hover:border-primary hover:text-primary;
+  }
+}
+
+@layer utilities {
+  .text-gradient-yellow {
+    background: linear-gradient(135deg, #ffd900, #ffed4a);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
