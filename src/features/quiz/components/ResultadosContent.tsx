@@ -105,6 +105,33 @@ export default function ResultadosContent() {
   const createOrder = useCallback(async () => {
     if (!result) throw new Error('No results')
 
+    // Ensure email is captured before payment (in case debounce didn't fire)
+    if (email && !emailCaptured) {
+      try {
+        const captureRes = await fetch('/api/capture-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email, name, answers,
+            totalScore: result.totalScore,
+            level: result.level,
+            categoryScores: result.categoryScores,
+            sessionId: sessionId || undefined,
+          }),
+        })
+        const captureData = await captureRes.json()
+        if (captureData.sessionId) {
+          setLocalSessionId(captureData.sessionId)
+          setSessionId(captureData.sessionId)
+          setEmailCaptured(true)
+        }
+      } catch (err) {
+        console.error('Pre-payment email capture error:', err)
+      }
+    }
+
+    const currentSessionId = sessionId || undefined
+
     const res = await fetch('/api/payment/create', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -114,7 +141,7 @@ export default function ResultadosContent() {
         level: result.level,
         categoryScores: result.categoryScores,
         email,
-        sessionId: sessionId || undefined,
+        sessionId: currentSessionId,
       }),
     })
 
@@ -128,7 +155,7 @@ export default function ResultadosContent() {
     setLocalSessionId(data.sessionId)
     setSessionId(data.sessionId)
     return data.orderId
-  }, [answers, result, email, sessionId, setSessionId])
+  }, [answers, result, email, name, sessionId, emailCaptured, setSessionId])
 
   const onApprove = useCallback(async (data: { orderID: string }) => {
     const res = await fetch('/api/payment/capture', {

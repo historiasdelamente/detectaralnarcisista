@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { Resend } from 'resend'
 import { siteConfig } from '@/config/siteConfig'
+import { sendToAirtable } from '@/shared/lib/airtable'
 
 const PAYPAL_API = process.env.PAYPAL_API_URL || 'https://api-m.paypal.com'
 const resend = new Resend(process.env.RESEND_API_KEY)
@@ -67,15 +68,30 @@ export async function POST(request: NextRequest) {
     // Send email report
     if (session?.email) {
       try {
+        const name = session.name || ''
+        const subject = name
+          ? `${name}, tu Reporte Completo - Detectar al Narcisista`
+          : 'Tu Reporte Completo - Detectar al Narcisista'
+
         await resend.emails.send({
           from: siteConfig.emails.from,
           to: session.email,
-          subject: 'Tu Reporte Completo - Detectar al Narcisista',
+          subject,
           html: buildEmailHtml(session),
         })
       } catch (emailError) {
         console.error('Email send error:', emailError)
       }
+
+      // Update Airtable with payment status
+      sendToAirtable({
+        nombre: session.name || '',
+        email: session.email,
+        fecha: new Date().toISOString(),
+        score: session.total_score,
+        nivel: getLevelLabel(session.level),
+        pagado: true,
+      }).catch((err) => console.error('Airtable update error:', err))
     }
 
     return NextResponse.json({ success: true })
@@ -108,6 +124,8 @@ function getLevelColor(level: string): string {
 interface SessionData {
   total_score: number
   level: string
+  name?: string
+  email?: string
   category_scores: Array<{
     emoji: string
     label: string
@@ -115,6 +133,37 @@ interface SessionData {
     score: number
     maxScore: number
   }>
+}
+
+function getRecommendations(level: string): string[] {
+  const recs: Record<string, string[]> = {
+    bajo: [
+      'Mantén una comunicación abierta y honesta en tu relación.',
+      'Establece y respeta límites saludables mutuamente.',
+      'Continúa educándote sobre relaciones saludables.',
+    ],
+    moderado: [
+      'Establece límites claros y comunícalos firmemente.',
+      'Considera hablar con un terapeuta o consejero de parejas.',
+      'Fortalece tu red de apoyo (amistades, familia).',
+      'Documenta situaciones que te incomoden para identificar patrones.',
+    ],
+    alto: [
+      'Busca apoyo profesional (psicólogo o terapeuta especializado).',
+      'Establece límites firmes y no negociables.',
+      'Fortalece tu red de apoyo y no te aísles.',
+      'Crea un plan de seguridad emocional y, si es necesario, física.',
+      'Considera si esta relación es compatible con tu bienestar.',
+    ],
+    extremo: [
+      'Busca ayuda profesional de inmediato (línea de ayuda o terapeuta).',
+      'Prioriza tu seguridad física y emocional ante todo.',
+      'Contacta organizaciones de apoyo a víctimas de abuso emocional.',
+      'No enfrentes esta situación sola — busca apoyo de personas de confianza.',
+      'Elabora un plan de seguridad con ayuda profesional.',
+    ],
+  }
+  return recs[level] || recs.moderado
 }
 
 function buildEmailHtml(session: SessionData): string {
@@ -151,6 +200,12 @@ function buildEmailHtml(session: SessionData): string {
           <table style="width: 100%; border-collapse: collapse;">
             ${categoryRows}
           </table>
+        </div>
+        <div style="background: #1E1E1E; border-radius: 16px; padding: 30px; margin-bottom: 20px;">
+          <h3 style="color: #ffffff; margin-bottom: 16px;">Recomendaciones Personalizadas</h3>
+          <ul style="color: #999; padding-left: 20px;">
+            ${getRecommendations(session.level).map(r => `<li style="margin-bottom: 8px;">${r}</li>`).join('')}
+          </ul>
         </div>
         <div style="text-align: center; padding: 20px; color: #444; font-size: 12px;">
           <p>Este test es una herramienta de orientación y no constituye un diagnóstico profesional.</p>

@@ -5,6 +5,7 @@ import { siteConfig } from '@/config/siteConfig'
 import { enqueueEmailSequence } from '@/features/email-sequence/services/emailScheduler'
 import { buildEmail1 } from '@/features/email-sequence/services/emailTemplates'
 import { EmailTemplateData } from '@/features/email-sequence/types'
+import { sendToAirtable } from '@/shared/lib/airtable'
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
@@ -120,6 +121,16 @@ export async function POST(request: NextRequest) {
         // Leave as pending for cron to retry
       }
     }
+
+    // Send to Airtable (fire and forget - don't block response)
+    sendToAirtable({
+      nombre: name || '',
+      email,
+      fecha: new Date().toISOString(),
+      score: totalScore,
+      nivel: getLevelLabel(level),
+      pagado: false,
+    }).catch((err) => console.error('Airtable error:', err))
 
     return NextResponse.json({ sessionId, alreadyEnrolled: alreadyExists })
   } catch (error) {
