@@ -2,13 +2,13 @@ import type { Metadata } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'Detectar al Narcisista | Test Psicologico Gratuito Basado en DSM-5',
-  description: 'Descubre si tu relacion tiene patrones narcisistas. Test cientifico de 10 preguntas basado en el DSM-5. Resultados inmediatos y reporte detallado.',
+  title: 'Detectar al Narcisista | Test Psicologico Gratuito DSM-5',
+  description: 'Aprende a detectar al narcisista. Test psicologico gratuito de 10 preguntas basado en el DSM-5. Analiza los 5 patrones de manipulacion narcisista. Resultados inmediatos.',
   openGraph: {
-    title: 'Detectar al Narcisista | Test Psicologico Gratuito',
-    description: 'Test cientifico de 10 preguntas para identificar patrones narcisistas en tu relacion.',
+    title: 'Detectar al Narcisista | Test Psicologico Gratuito DSM-5',
+    description: 'Test cientifico de 10 preguntas para detectar patrones narcisistas en tu relacion. Basado en el DSM-5.',
     locale: 'es_CO',
-    siteName: 'Detectar al Narcisista',
+    siteName: 'Historias de la Mente',
     type: 'website',
   },
 }
@@ -22,7 +22,7 @@ export default function RootLayout({
     <html lang="es">
       <head>
         <link
-          href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Montserrat:wght@400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=DM+Sans:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
         <link

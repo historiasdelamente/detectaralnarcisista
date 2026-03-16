@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -8,20 +8,18 @@
   --color-primary: #FDB913;
   --color-primary-hover: #E5A711;
   --color-bg: #FFFFFF;
-  --color-bg-warm: #FFFBF0;
+  --color-bg-warm: #FFF8F0;
   --color-text: #1A1A1A;
-  --color-text-muted: #555555;
-  --color-dark: #1A1A1A;
-  --color-rose: #D4A0A0;
+  --color-text-muted: #666666;
+  --color-dark: #0D0D0D;
   --color-gold: #C9A96E;
-  /* Keep dark theme vars for quiz/results */
-  --color-bg-dark: #0a0a0a;
+  --color-bg-dark: #0D0D0D;
   --color-surface: #1E1E1E;
   --color-surface-light: #2a2a2a;
 }
 
 html {
-  font-family: 'Montserrat', system-ui, sans-serif;
+  font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   scroll-behavior: smooth;
@@ -39,11 +37,11 @@ body {
 }
 
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 5px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #121212;
+  background: #0D0D0D;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -56,6 +54,7 @@ body {
 }
 
 @layer components {
+  /* Quiz/results dark theme components - DO NOT REMOVE */
   .glass-card {
     background: rgba(30, 30, 30, 0.6);
     backdrop-filter: blur(20px);
@@ -68,42 +67,20 @@ body {
     box-shadow: 0 0 30px rgba(255, 217, 0, 0.2);
   }
 
+  /* Landing page buttons */
   .btn-primary {
-    @apply bg-[#FDB913] text-[#1A1A1A] font-semibold rounded-full px-8 py-4
-           uppercase tracking-[1.5px] text-sm
+    @apply bg-[#FDB913] text-[#0D0D0D] font-semibold rounded-full px-8 py-4
+           uppercase tracking-[2px] text-sm
            transition-all duration-300 hover:bg-[#E5A711] hover:scale-105
            hover:shadow-[0_0_30px_rgba(253,185,19,0.4)];
-    font-family: 'Montserrat', sans-serif;
+    font-family: 'DM Sans', sans-serif;
   }
 
-  .btn-outline {
-    @apply border-2 border-[#1A1A1A]/20 text-[#1A1A1A] font-semibold rounded-full px-8 py-4
-           transition-all duration-300 hover:border-[#FDB913] hover:text-[#FDB913];
-  }
-
-  .card-warm {
-    background: #FFFFFF;
-    border: 1px solid #D4A0A0;
-    border-radius: 16px;
-    transition: all 0.3s ease;
-  }
-
-  .card-warm:hover {
-    border-color: #FDB913;
-    box-shadow: 0 8px 30px rgba(253, 185, 19, 0.1);
-    transform: translateY(-2px);
-  }
-
-  .card-dimension {
-    background: #FFFFFF;
-    border-left: 3px solid #FDB913;
-    border-radius: 0 12px 12px 0;
-    transition: all 0.3s ease;
-  }
-
-  .card-dimension:hover {
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
-    transform: translateY(-2px);
+  .btn-outline-yellow {
+    @apply border-2 border-[#FDB913] text-[#FDB913] font-semibold rounded-full px-8 py-4
+           uppercase tracking-[2px] text-sm
+           transition-all duration-300 hover:bg-[#FDB913] hover:text-[#0D0D0D];
+    font-family: 'DM Sans', sans-serif;
   }
 }
 
@@ -125,6 +102,6 @@ body {
   }
 
   .font-serif {
-    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-family: 'Playfair Display', Georgia, serif;
   }
 }
