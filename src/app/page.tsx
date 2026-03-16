@@ -184,6 +184,19 @@ export default function LandingPage() {
           Fondo oscuro #0D0D0D, imagen emergiendo
           ════════════════════════════════════════════ */}
       <section className="relative bg-[#0D0D0D] min-h-[100svh] flex items-center overflow-hidden">
+        {/* Background image on mobile — behind text */}
+        <div className="absolute inset-0 lg:hidden">
+          <Image
+            src="/hero-narcisista.webp"
+            alt=""
+            fill
+            className="object-cover object-top opacity-25"
+            priority
+            sizes="100vw"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#0D0D0D] via-[#0D0D0D]/70 to-[#0D0D0D]/40" />
+        </div>
+
         {/* Detection lines overlay (desktop only) */}
         <div className="hidden lg:block absolute inset-0 z-10">
           <DetectionLines />
@@ -192,16 +205,11 @@ export default function LandingPage() {
         {/* Bottom fade */}
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-[#0D0D0D] to-transparent z-10" />
 
-        <div className="relative z-20 w-full max-w-7xl mx-auto px-5 sm:px-8 py-20 lg:py-0">
-          <div className="flex flex-col lg:flex-row items-center gap-10 lg:gap-16">
+        <div className="relative z-20 w-full max-w-7xl mx-auto px-5 sm:px-8 py-24 lg:py-0">
+          <div className="flex flex-col lg:flex-row items-center lg:gap-16">
 
-            {/* ── Text side ── */}
-            <div className="flex-1 text-center lg:text-left order-2 lg:order-1">
-              {/* Tag */}
-              <span className="inline-block text-[#FDB913] text-[11px] font-semibold uppercase tracking-[3px] mb-6">
-                Test Psicologico &middot; DSM-5
-              </span>
-
+            {/* ── Text side (ALWAYS first on mobile) ── */}
+            <div className="flex-1 text-center lg:text-left">
               {/* Hook */}
               <p className="font-serif italic text-white/50 text-lg sm:text-xl mb-5 leading-relaxed">
                 Este test puede cambiar la forma en que ves tu relacion.
@@ -209,10 +217,10 @@ export default function LandingPage() {
 
               {/* H1 */}
               <h1 className="font-serif font-bold text-white leading-[1.1] mb-4">
-                <span className="block text-[1.8rem] sm:text-[2.4rem] lg:text-[3rem]">
+                <span className="block text-[1.9rem] sm:text-[2.4rem] lg:text-[3rem]">
                   Descubre si tu pareja
                 </span>
-                <span className="block text-[1.8rem] sm:text-[2.4rem] lg:text-[3rem]">
+                <span className="block text-[1.9rem] sm:text-[2.4rem] lg:text-[3rem]">
                   es <span className="text-[#FDB913]">narcisista</span>.
                 </span>
               </h1>
@@ -221,7 +229,7 @@ export default function LandingPage() {
               <div className="w-20 h-[2px] bg-[#FDB913] mb-6 mx-auto lg:mx-0" />
 
               {/* Copy */}
-              <p className="text-[#CCCCCC] text-base sm:text-[17px] leading-relaxed max-w-lg mx-auto lg:mx-0 mb-9">
+              <p className="text-[#CCCCCC] text-base sm:text-[17px] leading-relaxed max-w-lg mx-auto lg:mx-0 mb-8">
                 15 preguntas. 3 minutos.<br />
                 <span className="text-white/90 font-medium">Y la respuesta que llevas meses necesitando.</span>
               </p>
@@ -240,7 +248,7 @@ export default function LandingPage() {
               </div>
 
               {/* Trust line */}
-              <p className="text-[#666666] text-sm flex items-center justify-center lg:justify-start gap-2 mb-8">
+              <p className="text-[#666666] text-sm flex items-center justify-center lg:justify-start gap-2 mb-6">
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="#C9A96E" strokeWidth="1.5"><rect x="3" y="5.5" width="8" height="6.5" rx="1.5" /><path d="M5 5.5V4a2 2 0 0 1 4 0v1.5" /></svg>
                 Solo tu veras tu resultado
               </p>
@@ -251,24 +259,22 @@ export default function LandingPage() {
               </p>
             </div>
 
-            {/* ── Image side ── */}
-            <div className="flex-shrink-0 order-1 lg:order-2 relative">
-              {/* Subtle yellow glow behind */}
+            {/* ── Image side (desktop only — on mobile it's the background) ── */}
+            <div className="flex-shrink-0 relative hidden lg:block">
               <div className="absolute -inset-12 bg-[#FDB913]/[0.04] rounded-full blur-3xl" />
 
-              <div className="relative w-[260px] h-[340px] sm:w-[300px] sm:h-[390px] lg:w-[380px] lg:h-[490px]">
+              <div className="relative w-[380px] h-[490px]">
                 <Image
                   src="/hero-narcisista.webp"
-                  alt="Detectar al narcisista — herramienta de deteccion psicologica"
+                  alt="Detectar al narcisista"
                   fill
                   className="object-cover object-top rounded-2xl"
                   priority
-                  sizes="(max-width: 640px) 260px, (max-width: 1024px) 300px, 380px"
+                  sizes="380px"
                 />
-                {/* Edge fades into dark bg */}
                 <div className="absolute inset-0 rounded-2xl bg-gradient-to-t from-[#0D0D0D] via-transparent to-transparent" />
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-transparent via-transparent to-[#0D0D0D]/50 hidden lg:block" />
-                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-transparent to-[#0D0D0D]/30 hidden lg:block" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-l from-transparent via-transparent to-[#0D0D0D]/50" />
+                <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-transparent to-[#0D0D0D]/30" />
               </div>
             </div>
 
