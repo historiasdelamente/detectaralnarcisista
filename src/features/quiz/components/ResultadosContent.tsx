@@ -19,7 +19,6 @@ export default function ResultadosContent() {
   const [paymentError, setPaymentError] = useState('')
   const [sessionId, setLocalSessionId] = useState<string | null>(null)
   const [emailCaptured, setEmailCaptured] = useState(false)
-  const [reportSent, setReportSent] = useState(false)
 
   useEffect(() => {
     if (useQuizStore.persist.hasHydrated()) {
@@ -48,7 +47,7 @@ export default function ResultadosContent() {
     }
   }, [hydrated, isCompleted, router])
 
-  // Debounced email capture - sends email + quiz data to start drip sequence
+  // Debounced email capture - saves quiz data + sends to Airtable
   useEffect(() => {
     if (!email || !email.includes('@') || !result || emailCaptured) return
 
@@ -81,26 +80,7 @@ export default function ResultadosContent() {
     return () => clearTimeout(timer)
   }, [email, result, emailCaptured, answers, sessionId, setSessionId, name])
 
-  // Send report via email after payment
-  useEffect(() => {
-    if (!isPaid || reportSent || !email || !sessionId) return
-
-    const sendReport = async () => {
-      try {
-        await fetch('/api/send-report', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sessionId, email, name }),
-        })
-        setReportSent(true)
-      } catch (err) {
-        console.error('Error sending report:', err)
-        setReportSent(true) // Don't block UI
-      }
-    }
-
-    sendReport()
-  }, [isPaid, reportSent, email, sessionId, name])
+  // Report is sent from backend in /api/payment/capture after successful payment
 
   const createOrder = useCallback(async () => {
     if (!result) throw new Error('No results')

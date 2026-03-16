@@ -82,6 +82,12 @@ export async function GET(request: NextRequest) {
         continue
       }
 
+      // Safety check: only send emails for paid sessions
+      if (session.payment_status !== 'approved') {
+        console.log(`Skipping email ${emailRow.id} - session not paid`)
+        continue
+      }
+
       const sortedCategories = [...(session.category_scores || [])].sort(
         (a: { percentage: number }, b: { percentage: number }) => b.percentage - a.percentage
       )
