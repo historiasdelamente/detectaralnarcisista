@@ -29,7 +29,7 @@ ${content}
 <!-- FOOTER -->
 <tr><td style="background-color:${COLORS.white};padding:20px 25px;text-align:center;">
   <p style="margin:0 0 3px 0;font-family:Arial,sans-serif;font-size:10px;color:${COLORS.gold};font-weight:bold;">Historias de la Mente &bull; @historiasdelamente</p>
-  <p style="margin:0;font-family:Arial,sans-serif;font-size:9px;color:${COLORS.muted};">Javier Vieira &bull; Psic&oacute;logo Especialista &bull; COLPSIC 293219</p>
+  <p style="margin:0;font-family:Arial,sans-serif;font-size:9px;color:${COLORS.muted};">Javier Vieira &bull; Psic&oacute;logo Especialista</p>
 </td></tr>
 
 </table>

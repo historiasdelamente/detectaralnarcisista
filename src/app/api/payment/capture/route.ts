@@ -317,7 +317,7 @@ function buildReportEmail(session: SessionData): string {
 <!-- FOOTER -->
 <tr><td style="background-color:#ffffff;padding:20px 25px;text-align:center;">
   <p style="margin:0 0 3px 0;font-family:Arial,sans-serif;font-size:10px;color:#C9A84C;font-weight:bold;">Historias de la Mente &bull; @historiasdelamente</p>
-  <p style="margin:0;font-family:Arial,sans-serif;font-size:9px;color:#999999;">Javier Vieira &bull; Psic&oacute;logo Especialista &bull; COLPSIC 293219</p>
+  <p style="margin:0;font-family:Arial,sans-serif;font-size:9px;color:#999999;">Javier Vieira &bull; Psic&oacute;logo Especialista</p>
   <p style="margin:8px 0 0 0;font-family:Arial,sans-serif;font-size:9px;color:#cccccc;">Este test es una herramienta de orientaci&oacute;n y no constituye un diagn&oacute;stico profesional.</p>
 </td></tr>
 
