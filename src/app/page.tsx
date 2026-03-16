@@ -160,19 +160,19 @@ export default function LandingPage() {
           <div className="flex flex-col lg:flex-row items-center lg:gap-16">
 
             {/* ── Mobile/Tablet: foto arriba con glow ── */}
-            <div className="lg:hidden flex justify-center mb-6">
+            <div className="lg:hidden flex justify-center mb-5">
               <div className="relative">
-                {/* Glow ring */}
-                <div className="absolute -inset-3 rounded-full bg-gradient-to-br from-[#FDB913]/30 via-[#FDB913]/10 to-[#C9A96E]/20 blur-xl" />
-                <div className="absolute -inset-[2px] rounded-full bg-gradient-to-br from-[#FDB913]/40 to-[#C9A96E]/30" />
-                <div className="relative w-[130px] h-[130px] rounded-full overflow-hidden border-2 border-white">
+                {/* Glow */}
+                <div className="absolute -inset-4 rounded-2xl bg-gradient-to-br from-[#FDB913]/25 via-[#FDB913]/10 to-[#C9A96E]/15 blur-xl" />
+                <div className="absolute -inset-[2px] rounded-2xl bg-gradient-to-br from-[#FDB913]/30 to-[#C9A96E]/20" />
+                <div className="relative w-[200px] h-[180px] sm:w-[240px] sm:h-[210px] rounded-2xl overflow-hidden border-2 border-white">
                   <Image
                     src="/hero-narcisista.webp"
                     alt="Test para detectar al narcisista"
                     fill
                     className="object-cover object-top"
                     priority
-                    sizes="130px"
+                    sizes="240px"
                   />
                 </div>
               </div>
@@ -181,7 +181,7 @@ export default function LandingPage() {
             {/* ── Text side ── */}
             <div className="flex-1 text-center lg:text-left">
               {/* Hook */}
-              <p className="font-serif italic text-[#999999] text-base sm:text-lg mb-3 leading-relaxed">
+              <p className="font-serif italic text-[#555555] text-base sm:text-lg mb-3 leading-relaxed">
                 Este test puede cambiar la forma en que ves tu relaci&oacute;n.
               </p>
 
